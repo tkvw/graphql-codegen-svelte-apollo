@@ -1,12 +1,12 @@
 import client from "src/apollo-client";
-import type {
-        ApolloQueryResult, ObservableQuery, QueryOptions, MutationOptions, SubscriptionOptions
-      } from "@apollo/client";
-import { readable } from "svelte/store";
-import type { Readable } from "svelte/store";
-import gql from "graphql-tag"
+import { gql, ApolloClient, ApolloQueryResult, ObservableQuery, WatchQueryOptions, MutationOptions, SubscriptionOptions } from "@apollo/client/core";
+import { readable,Readable } from "svelte/store";
+import { getContext, setContext } from 'svelte';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+const key ={};
+export const setClient = <TCache>(client: ApolloClient<TCache>) => setContext(key, client);
+const getClient = <TCache=any>() => getContext(key) as ApolloClient<TCache>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -1478,7 +1478,7 @@ export const AddCodegenUser = (
               "mutation"
             >
           ) => {
-            const m = client.mutate<AddCodegenUserMutation, AddCodegenUserMutationVariables>({
+            const m = getClient().mutate<AddCodegenUserMutation, AddCodegenUserMutationVariables>({
               mutation: AddCodegenUserDoc,
               ...options,
             });
@@ -1490,7 +1490,7 @@ export const DeleteCodegenUser = (
               "mutation"
             >
           ) => {
-            const m = client.mutate<DeleteCodegenUserMutation, DeleteCodegenUserMutationVariables>({
+            const m = getClient().mutate<DeleteCodegenUserMutation, DeleteCodegenUserMutationVariables>({
               mutation: DeleteCodegenUserDoc,
               ...options,
             });
@@ -1498,7 +1498,7 @@ export const DeleteCodegenUser = (
           }
 export const GetCodegenUsers = (
             options: Omit<
-              QueryOptions<GetCodegenUsersQueryVariables>, 
+              WatchQueryOptions<GetCodegenUsersQueryVariables>, 
               "query"
             >
           ): Readable<
@@ -1509,7 +1509,9 @@ export const GetCodegenUsers = (
               >;
             }
           > => {
-            const q = client.watchQuery({
+
+
+            const q = getClient().watchQuery({
               query: GetCodegenUsersDoc,
               ...options,
             });
@@ -1521,9 +1523,9 @@ export const GetCodegenUsers = (
                 >;
               }
             >(
-              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },
               (set) => {
-                q.subscribe((v) => {
+                q.subscribe((v: any) => {
                   set({ ...v, query: q });
                 });
               }
@@ -1533,7 +1535,7 @@ export const GetCodegenUsers = (
         
 export const GetLaunches = (
             options: Omit<
-              QueryOptions<GetLaunchesQueryVariables>, 
+              WatchQueryOptions<GetLaunchesQueryVariables>, 
               "query"
             >
           ): Readable<
@@ -1544,7 +1546,9 @@ export const GetLaunches = (
               >;
             }
           > => {
-            const q = client.watchQuery({
+
+
+            const q = getClient().watchQuery({
               query: GetLaunchesDoc,
               ...options,
             });
@@ -1556,9 +1560,9 @@ export const GetLaunches = (
                 >;
               }
             >(
-              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },
               (set) => {
-                q.subscribe((v) => {
+                q.subscribe((v: any) => {
                   set({ ...v, query: q });
                 });
               }
@@ -1568,7 +1572,7 @@ export const GetLaunches = (
         
 export const GetLaunchesWithArgs = (
             options: Omit<
-              QueryOptions<GetLaunchesWithArgsQueryVariables>, 
+              WatchQueryOptions<GetLaunchesWithArgsQueryVariables>, 
               "query"
             >
           ): Readable<
@@ -1579,7 +1583,9 @@ export const GetLaunchesWithArgs = (
               >;
             }
           > => {
-            const q = client.watchQuery({
+
+
+            const q = getClient().watchQuery({
               query: GetLaunchesWithArgsDoc,
               ...options,
             });
@@ -1591,9 +1597,9 @@ export const GetLaunchesWithArgs = (
                 >;
               }
             >(
-              { data: null, loading: true, error: null, networkStatus: 1, query: null },
+              { data: {} as any, loading: true, error: undefined, networkStatus: 1, query: q },
               (set) => {
-                q.subscribe((v) => {
+                q.subscribe((v: any) => {
                   set({ ...v, query: q });
                 });
               }
@@ -1604,7 +1610,7 @@ export const GetLaunchesWithArgs = (
 export const UsersAdded = (
             options: Omit<SubscriptionOptions<UsersAddedSubscriptionVariables>, "query">
           ) => {
-            const q = client.subscribe<UsersAddedSubscription, UsersAddedSubscriptionVariables>(
+            const q = getClient().subscribe<UsersAddedSubscription, UsersAddedSubscriptionVariables>(
               {
                 query: UsersAddedDoc,
                 ...options,
@@ -1618,7 +1624,7 @@ export const InsertUsersAndPublish = (
               "mutation"
             >
           ) => {
-            const m = client.mutate<InsertUsersAndPublishMutation, InsertUsersAndPublishMutationVariables>({
+            const m = getClient().mutate<InsertUsersAndPublishMutation, InsertUsersAndPublishMutationVariables>({
               mutation: InsertUsersAndPublishDoc,
               ...options,
             });

@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "release": "standard-version",
-    "compile": ""
+    "compile": "tsc src/index.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.2.7",

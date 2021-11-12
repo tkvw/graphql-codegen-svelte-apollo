@@ -1,6 +1,5 @@
 import { CodegenPlugin } from "@graphql-codegen/plugin-helpers";
 import { LoadedFragment } from "@graphql-codegen/visitor-plugin-common";
-import { camelCase } from "camel-case";
 import {
   concatAST,
   FragmentDefinitionNode,
@@ -12,11 +11,6 @@ import { pascalCase } from "pascal-case";
 
 const visitorPluginCommon = require("@graphql-codegen/visitor-plugin-common");
 
-const operationMap = {
-  query: "query",
-  subscription: "subscribe",
-  mutation: "mutate",
-};
 
 module.exports = {
   plugin: (schema, documents, config, info) => {
@@ -51,7 +45,7 @@ module.exports = {
 
     const operationImport = `${
       operations.some((op) => op.operation == "query")
-        ? `ApolloQueryResult, ObservableQuery, WatchQueryOptions, ${
+        ? `ApolloClient, ApolloQueryResult, ObservableQuery, WatchQueryOptions, ${
             config.asyncQuery ? "QueryOptions, " : ""
           }`
         : ""
@@ -67,12 +61,12 @@ module.exports = {
 
     const imports = [
       `import client from "${config.clientPath}";`,
-      `import type {
-        ${operationImport}
-      } from "@apollo/client";`,
-      `import { readable } from "svelte/store";`,
-      `import type { Readable } from "svelte/store";`,
-      `import gql from "graphql-tag"`,
+      `import { gql, ${operationImport} } from "@apollo/client/core";`,
+      `import { readable,Readable } from "svelte/store";`,
+      `import { getContext, setContext } from 'svelte';`,
+      `const key ={};`,
+      'export const setClient = <TCache>(client: ApolloClient<TCache>) => setContext(key, client);',
+      'const getClient = <TCache=any>() => getContext(key) as ApolloClient<TCache>;'
     ];
 
     const ops = operations
@@ -99,7 +93,9 @@ module.exports = {
               >;
             }
           > => {
-            const q = client.watchQuery({
+
+
+            const q = getClient().watchQuery({
               query: ${pascalCase(o.name.value)}Doc,
               ...options,
             });
@@ -131,7 +127,7 @@ module.exports = {
                   "query"
                 >
               ) => {
-                return client.query<${op}>({query: ${pascalCase(
+                return getClient().query<${op}>({query: ${pascalCase(
                 o.name.value
               )}Doc, ...options})
               }
@@ -145,7 +141,7 @@ module.exports = {
               "mutation"
             >
           ) => {
-            const m = client.mutate<${op}, ${opv}>({
+            const m = getClient().mutate<${op}, ${opv}>({
               mutation: ${pascalCase(o.name.value)}Doc,
               ...options,
             });
@@ -156,7 +152,7 @@ module.exports = {
           operation = `export const ${o.name.value} = (
             options: Omit<SubscriptionOptions<${opv}>, "query">
           ) => {
-            const q = client.subscribe<${op}, ${opv}>(
+            const q = getClient().subscribe<${op}, ${opv}>(
               {
                 query: ${pascalCase(o.name.value)}Doc,
                 ...options,

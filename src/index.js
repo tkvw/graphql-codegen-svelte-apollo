@@ -32,7 +32,6 @@ module.exports = {
             ? "SubscriptionOptions, "
             : "")).slice(0, -2);
         var imports = [
-            "import client from \"" + config.clientPath + "\";",
             "import { gql, " + operationImport + " } from \"@apollo/client/core\";",
             "import { readable,Readable } from \"svelte/store\";",
             "import { getContext, setContext } from 'svelte';",

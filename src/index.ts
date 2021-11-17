@@ -164,6 +164,7 @@ export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQue
 export type ${mutationOptionsInterfaceName}<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
 export interface ${mutationResultInterfaceName}<TData,TVariables> extends FetchResult<TData>{
   error?: Error;
+  executing?: true;
   invocationCount: number;
   options?: ApolloMutationOptions<TData,TVariables>;
 };
@@ -300,6 +301,11 @@ export const ${functionName} = (
         mutation: ${documentVariableName},
         ...options,
       };
+      set({
+        invocationCount,
+        executing: true,
+        options: mutateOptions
+      });
       client
         .mutate<${op},${opv}>(mutateOptions)
         .then((x) => {

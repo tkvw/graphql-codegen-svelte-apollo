@@ -20,6 +20,7 @@ export interface SvelteQueryResult<TVariables,TData> extends ApolloQueryResult<T
 export type SvelteMutationOptions<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
 export interface SvelteMutationResult<TData,TVariables> extends FetchResult<TData>{
   error?: Error;
+  executing?: true;
   invocationCount: number;
   options?: ApolloMutationOptions<TData,TVariables>;
 };
@@ -1548,6 +1549,11 @@ export const AddCodegenUser = (
         mutation: AddCodegenUserDocument,
         ...options,
       };
+      set({
+        invocationCount,
+        executing: true,
+        options: mutateOptions
+      });
       client
         .mutate<AddCodegenUserMutation,AddCodegenUserMutationVariables>(mutateOptions)
         .then((x) => {
@@ -1606,6 +1612,11 @@ export const DeleteCodegenUser = (
         mutation: DeleteCodegenUserDocument,
         ...options,
       };
+      set({
+        invocationCount,
+        executing: true,
+        options: mutateOptions
+      });
       client
         .mutate<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>(mutateOptions)
         .then((x) => {
@@ -1841,6 +1852,11 @@ export const InsertUsersAndPublish = (
         mutation: InsertUsersAndPublishDocument,
         ...options,
       };
+      set({
+        invocationCount,
+        executing: true,
+        options: mutateOptions
+      });
       client
         .mutate<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>(mutateOptions)
         .then((x) => {

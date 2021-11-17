@@ -1523,12 +1523,13 @@ export const InsertUsersAndPublishDocument = gql`
     `;
 
 export const AddCodegenUser = (
-  rxOptions?: Readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>,
+  readInitOptions?: Readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>,
   initialValue?:SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>
-): [Writable<AddCodegenUserMutationVariables>,Readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>] => {
+): [Writable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>,Readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>] => {
   
-  rxOptions ??= readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>({},noop);
-  const setVariables = writable<AddCodegenUserMutationVariables>(undefined);
+  readInitOptions ??= readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>({},noop);
+  const setOptions = writable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>(undefined);   
+
   let invocationCount = 0;  
 
   initialValue = {
@@ -1537,64 +1538,66 @@ export const AddCodegenUser = (
   };
 
   const result = readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>(initialValue,(set) => {
-    let stopReadingOptions: () => void;
-    return setVariables.subscribe(variables => {
+    let stopReadingInitOptions: () => void;
+    return setOptions.subscribe(requestOptions => {
       if(invocationCount++ === 0) return; // Skip the first invocation
-      if(stopReadingOptions) stopReadingOptions();
+      if(stopReadingInitOptions) stopReadingInitOptions();
       let hasSubscriptions = true;
-      stopReadingOptions = rxOptions.subscribe(options => {
-        const requestOptions = {
+      stopReadingInitOptions = readInitOptions.subscribe(initOptions => {
+        const options = {
           mutation: AddCodegenUserDocument,
-          ...options,
+          ...initOptions,
+          ...requestOptions,
           variables: {
-            ...options?.variables,
-            ...variables
+            ...initOptions?.variables,
+            ...requestOptions?.variables
           }
         };
         set({
           invocationCount,
           executing: true,
-          options: requestOptions
+          options
         });
         client
-          .mutate<AddCodegenUserMutation,AddCodegenUserMutationVariables>(requestOptions)
+          .mutate<AddCodegenUserMutation,AddCodegenUserMutationVariables>(options)
           .then((x) => {
             if (!hasSubscriptions) return;
             set({
               ...x,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           })
           .catch((error) => {
             set({
               error,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           });
       });
       
       return function stop(){
         hasSubscriptions = false;
-        stopReadingOptions();
+        stopReadingInitOptions();
       }
     });
   });
   return [
-    setVariables,
+    setOptions,
     result
   ];
 }
 
 
 export const DeleteCodegenUser = (
-  rxOptions?: Readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>,
+  readInitOptions?: Readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>,
   initialValue?:SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>
-): [Writable<DeleteCodegenUserMutationVariables>,Readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>] => {
+): [Writable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>,Readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>] => {
   
-  rxOptions ??= readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>({},noop);
-  const setVariables = writable<DeleteCodegenUserMutationVariables>(undefined);
+  readInitOptions ??= readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>({},noop);
+  const setOptions = writable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>(undefined);   
+
   let invocationCount = 0;  
 
   initialValue = {
@@ -1603,52 +1606,53 @@ export const DeleteCodegenUser = (
   };
 
   const result = readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>(initialValue,(set) => {
-    let stopReadingOptions: () => void;
-    return setVariables.subscribe(variables => {
+    let stopReadingInitOptions: () => void;
+    return setOptions.subscribe(requestOptions => {
       if(invocationCount++ === 0) return; // Skip the first invocation
-      if(stopReadingOptions) stopReadingOptions();
+      if(stopReadingInitOptions) stopReadingInitOptions();
       let hasSubscriptions = true;
-      stopReadingOptions = rxOptions.subscribe(options => {
-        const requestOptions = {
+      stopReadingInitOptions = readInitOptions.subscribe(initOptions => {
+        const options = {
           mutation: DeleteCodegenUserDocument,
-          ...options,
+          ...initOptions,
+          ...requestOptions,
           variables: {
-            ...options?.variables,
-            ...variables
+            ...initOptions?.variables,
+            ...requestOptions?.variables
           }
         };
         set({
           invocationCount,
           executing: true,
-          options: requestOptions
+          options
         });
         client
-          .mutate<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>(requestOptions)
+          .mutate<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>(options)
           .then((x) => {
             if (!hasSubscriptions) return;
             set({
               ...x,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           })
           .catch((error) => {
             set({
               error,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           });
       });
       
       return function stop(){
         hasSubscriptions = false;
-        stopReadingOptions();
+        stopReadingInitOptions();
       }
     });
   });
   return [
-    setVariables,
+    setOptions,
     result
   ];
 }
@@ -1832,12 +1836,13 @@ export const UsersAdded = (rxOptions?: Readable<SvelteSubscriptionOptions<UsersA
   
 
 export const InsertUsersAndPublish = (
-  rxOptions?: Readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>,
+  readInitOptions?: Readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>,
   initialValue?:SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>
-): [Writable<InsertUsersAndPublishMutationVariables>,Readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>] => {
+): [Writable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>,Readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>] => {
   
-  rxOptions ??= readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>({},noop);
-  const setVariables = writable<InsertUsersAndPublishMutationVariables>(undefined);
+  readInitOptions ??= readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>({},noop);
+  const setOptions = writable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>(undefined);   
+
   let invocationCount = 0;  
 
   initialValue = {
@@ -1846,52 +1851,53 @@ export const InsertUsersAndPublish = (
   };
 
   const result = readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>(initialValue,(set) => {
-    let stopReadingOptions: () => void;
-    return setVariables.subscribe(variables => {
+    let stopReadingInitOptions: () => void;
+    return setOptions.subscribe(requestOptions => {
       if(invocationCount++ === 0) return; // Skip the first invocation
-      if(stopReadingOptions) stopReadingOptions();
+      if(stopReadingInitOptions) stopReadingInitOptions();
       let hasSubscriptions = true;
-      stopReadingOptions = rxOptions.subscribe(options => {
-        const requestOptions = {
+      stopReadingInitOptions = readInitOptions.subscribe(initOptions => {
+        const options = {
           mutation: InsertUsersAndPublishDocument,
-          ...options,
+          ...initOptions,
+          ...requestOptions,
           variables: {
-            ...options?.variables,
-            ...variables
+            ...initOptions?.variables,
+            ...requestOptions?.variables
           }
         };
         set({
           invocationCount,
           executing: true,
-          options: requestOptions
+          options
         });
         client
-          .mutate<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>(requestOptions)
+          .mutate<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>(options)
           .then((x) => {
             if (!hasSubscriptions) return;
             set({
               ...x,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           })
           .catch((error) => {
             set({
               error,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           });
       });
       
       return function stop(){
         hasSubscriptions = false;
-        stopReadingOptions();
+        stopReadingInitOptions();
       }
     });
   });
   return [
-    setVariables,
+    setOptions,
     result
   ];
 }

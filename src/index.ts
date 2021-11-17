@@ -275,12 +275,13 @@ export const ${asyncOperationFunctionName} = (options: ApolloQueryOptions<${opv}
         if (o.operation == "mutation") {
           operation = `
 export const ${functionName} = (
-  rxOptions?: Readable<${mutationOptionsInterfaceName}<${op},${opv}>>,
+  readInitOptions?: Readable<${mutationOptionsInterfaceName}<${op},${opv}>>,
   initialValue?:${mutationResultInterfaceName}<${op},${opv}>
-): [Writable<${opv}>,Readable<${mutationResultInterfaceName}<${op},${opv}>>] => {
+): [Writable<${mutationOptionsInterfaceName}<${op},${opv}>>,Readable<${mutationResultInterfaceName}<${op},${opv}>>] => {
   
-  rxOptions ??= readable<${mutationOptionsInterfaceName}<${op},${opv}>>({},noop);
-  const setVariables = writable<${opv}>(undefined);
+  readInitOptions ??= readable<${mutationOptionsInterfaceName}<${op},${opv}>>({},noop);
+  const setOptions = writable<${mutationOptionsInterfaceName}<${op},${opv}>>(undefined);   
+
   let invocationCount = 0;  
 
   initialValue = {
@@ -289,52 +290,53 @@ export const ${functionName} = (
   };
 
   const result = readable<${mutationResultInterfaceName}<${op},${opv}>>(initialValue,(set) => {
-    let stopReadingOptions: () => void;
-    return setVariables.subscribe(variables => {
+    let stopReadingInitOptions: () => void;
+    return setOptions.subscribe(requestOptions => {
       if(invocationCount++ === 0) return; // Skip the first invocation
-      if(stopReadingOptions) stopReadingOptions();
+      if(stopReadingInitOptions) stopReadingInitOptions();
       let hasSubscriptions = true;
-      stopReadingOptions = rxOptions.subscribe(options => {
-        const requestOptions = {
+      stopReadingInitOptions = readInitOptions.subscribe(initOptions => {
+        const options = {
           mutation: ${documentVariableName},
-          ...options,
+          ...initOptions,
+          ...requestOptions,
           variables: {
-            ...options?.variables,
-            ...variables
+            ...initOptions?.variables,
+            ...requestOptions?.variables
           }
         };
         set({
           invocationCount,
           executing: true,
-          options: requestOptions
+          options
         });
         client
-          .mutate<${op},${opv}>(requestOptions)
+          .mutate<${op},${opv}>(options)
           .then((x) => {
             if (!hasSubscriptions) return;
             set({
               ...x,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           })
           .catch((error) => {
             set({
               error,
               invocationCount,
-              options: requestOptions,
+              options,
             });
           });
       });
       
       return function stop(){
         hasSubscriptions = false;
-        stopReadingOptions();
+        stopReadingInitOptions();
       }
     });
   });
   return [
-    setVariables,
+    setOptions,
     result
   ];
 }

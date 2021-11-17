@@ -141,8 +141,9 @@ module.exports = {
       `import client from "${clientPath}";`,
       `import { gql } from "@apollo/client/core";`,
       `import type { ${operationImport}${importFetchResult} } from "@apollo/client/core";`,
-      `import { readable } from "svelte/store";`,
-      `import type { Readable } from "svelte/store";`,
+      `import { readable, writable, derived } from "svelte/store";`,
+      `import type { Readable, Writable } from "svelte/store";`,
+      `const noop = () => {/* NOOP */};`
     ];
 
 
@@ -163,6 +164,7 @@ export interface ${queryResultInterfaceName}<TVariables,TData> extends ApolloQue
 export type ${mutationOptionsInterfaceName}<TData,TVariables> = Omit<ApolloMutationOptions<TData,TVariables>,"mutation">;
 export interface ${mutationResultInterfaceName}<TData,TVariables> extends FetchResult<TData>{
   error?: Error;
+  invocationCount: number;
   options?: ApolloMutationOptions<TData,TVariables>;
 };
 `);
@@ -215,7 +217,8 @@ export const createRxWriteable = <T>(initialValue:T) => {
         let operation;
         if (o.operation == "query") {
           operation = `
-export const ${functionName} = (rxOptions: Readable<${queryOptionsInterfaceName}<${opv},${op}>>,initialValue?:${queryResultInterfaceName}<${opv},${op}>): Readable<${queryResultInterfaceName}<${opv},${op}>> => {
+export const ${functionName} = (rxOptions?: Readable<${queryOptionsInterfaceName}<${opv},${op}>>,initialValue?:${queryResultInterfaceName}<${opv},${op}>): Readable<${queryResultInterfaceName}<${opv},${op}>> => {
+  rxOptions ??= readable<${queryOptionsInterfaceName}<${opv},${op}>>({},noop);
   initialValue ??= { data: {} as ${op}, loading: true, error: undefined, networkStatus: 1 };
   return readable<${queryResultInterfaceName}<${opv},${op}>>(
     initialValue,
@@ -255,51 +258,84 @@ export const ${functionName} = (rxOptions: Readable<${queryOptionsInterfaceName}
       }
     }
   );
-}`;
+}
+`;
           if (asyncQuery) {
             const asyncOperationFunctionName = getAsyncOperationFunctionName(functionName);
             operation =
               operation +
               `
-              export const ${asyncOperationFunctionName} = (options: ApolloQueryOptions<${opv}>) => {
-                return client.query<${op}>({query: ${documentVariableName}, ...options})
-              }
-            `;
+export const ${asyncOperationFunctionName} = (options: ApolloQueryOptions<${opv}>) => {
+  return client.query<${op}>({query: ${documentVariableName}, ...options})
+}
+`;
           }
         }
         if (o.operation == "mutation") {
           operation = `
-export const ${functionName} = (rxOptions: Readable<${mutationOptionsInterfaceName}<${op},${opv}>>,initialValue?:${mutationResultInterfaceName}<${op},${opv}>): Readable<${mutationResultInterfaceName}<${op},${opv}>> =>
-  readable<${mutationResultInterfaceName}<${op},${opv}>>(initialValue,set => {
-    let stopped = false;
-    const unsubscribe = rxOptions.subscribe(options => {
+export const ${functionName} = (
+  rxOptions?: Readable<${mutationOptionsInterfaceName}<${op},${opv}>>,
+  initialValue?:${mutationResultInterfaceName}<${op},${opv}>
+): [Writable<${opv}>,Readable<${mutationResultInterfaceName}<${op},${opv}>>] => {
+  
+  rxOptions ??= readable<${mutationOptionsInterfaceName}<${op},${opv}>>({},noop);
+  const variables = writable<${opv}>(undefined);
+  let invocationCount = -1;
+  let unSubscribeInvocationCount = variables.subscribe(() => invocationCount++);
+
+  const result = readable<${mutationResultInterfaceName}<${op},${opv}>>(initialValue,(set) => {
+    let unsubscribed = false; 
+    const unsubscribe = derived([variables,rxOptions],(([variables,options]) => ({
+      ...options,
+      variables: {
+        ...options?.variables,
+        ...variables
+      }
+    }))).subscribe((options) => {
+      if(invocationCount===0){
+        // So long the writeable is not set, do nothing
+        return;
+      }
       const mutateOptions = {
         mutation: ${documentVariableName},
         ...options,
       };
-      client.mutate<${op}, ${opv}>(mutateOptions).then(x =>{
-        if(stopped) return;
-        set({
-          ...x,
-          options: mutateOptions
-        });
-      }).catch(error => {
-        set({
-          error,
-          options: mutateOptions
+      client
+        .mutate<${op},${opv}>(mutateOptions)
+        .then((x) => {
+          if (unsubscribed) return;
+          set({
+            ...x,
+            invocationCount,
+            options: mutateOptions,
+          });
         })
-      });
-    });
-    return function stop(){
-      stopped = true;  
+        .catch((error) => {
+          set({
+            error,
+            invocationCount,
+            options: mutateOptions,
+          });
+        });
+    }); 
+    return function stop() {
+      unsubscribed = true;
       unsubscribe();
-    }
-})`;
+      unSubscribeInvocationCount();
+    };
+  });
+  return [
+    variables,
+    result
+  ];
+}
+`;
         }
         if (o.operation == "subscription") {
           operation = `
-export const ${functionName} = (rxOptions: Readable<${subscriptionOptionsInterfaceName}<${opv},${op}>>,initialValue?:${subscriptionResultInterfaceName}<${opv},${op}>): Readable<${subscriptionResultInterfaceName}<${opv},${op}>> => 
-  readable<${subscriptionResultInterfaceName}<${opv},${op}>>(initialValue,set => {
+export const ${functionName} = (rxOptions?: Readable<${subscriptionOptionsInterfaceName}<${opv},${op}>>,initialValue?:${subscriptionResultInterfaceName}<${opv},${op}>): Readable<${subscriptionResultInterfaceName}<${opv},${op}>> => {
+  rxOptions ??= readable<${subscriptionOptionsInterfaceName}<${opv},${op}>>({},noop);
+  return readable<${subscriptionResultInterfaceName}<${opv},${op}>>(initialValue,set => {
     let subscription: ObservableSubscription;
     const unsubscribe = rxOptions.subscribe(options => {
         const subscriptionOptions = {
@@ -325,8 +361,10 @@ export const ${functionName} = (rxOptions: Readable<${subscriptionOptionsInterfa
         if(subscription) subscription.unsubscribe();
         unsubscribe();
       }
-  })
-`;
+  });
+}
+  
+  `;
         }
         return operation;
       })

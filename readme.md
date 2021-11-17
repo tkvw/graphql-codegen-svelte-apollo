@@ -252,26 +252,21 @@ Allows you to generated a binable observable
 import {debounceTime,map,startsWith,filter} from "rxjs"
 import {createRxWriteable,useCheckUserNameQuery} from "$lib/generated" // Reference to your generated file
 import {derived} from "svelte/store"
-const username = createRxWriteable('');
+const initialUsername = '';
+const username = createRxWriteable(initialUsername);
 
-const checkUsername = username.pipe(
+const checkUsername = toReadable(initialUsername)(username.pipe(
   debounceTime(1500),
-  filter(x => !!x),
-  startsWith('')
-);
-
-const shouldSkip = checkUsername.pipe(
-  map(x => !x)
-);
+  filter(x => !!x)
+));
 
 const response = useCheckUserNameQuery(derived(
   checkUsername,
-  shouldSkip,
-  (username,skip) => ({
+  (username) => ({
     variables: {
       username
     },
-    skip
+    skip: !username
   })
 ));
 $: console.log({

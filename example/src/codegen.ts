@@ -1528,58 +1528,61 @@ export const AddCodegenUser = (
 ): [Writable<AddCodegenUserMutationVariables>,Readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>] => {
   
   rxOptions ??= readable<SvelteMutationOptions<AddCodegenUserMutation,AddCodegenUserMutationVariables>>({},noop);
-  const variables = writable<AddCodegenUserMutationVariables>(undefined);
-  let invocationCount = -1;
-  let unSubscribeInvocationCount = variables.subscribe(() => invocationCount++);
+  const setVariables = writable<AddCodegenUserMutationVariables>(undefined);
+  let invocationCount = 0;  
+
+  initialValue = {
+    invocationCount,
+    ...initialValue
+  };
 
   const result = readable<SvelteMutationResult<AddCodegenUserMutation,AddCodegenUserMutationVariables>>(initialValue,(set) => {
-    let unsubscribed = false; 
-    const unsubscribe = derived([variables,rxOptions],(([variables,options]) => ({
-      ...options,
-      variables: {
-        ...options?.variables,
-        ...variables
-      }
-    }))).subscribe((options) => {
-      if(invocationCount===0){
-        // So long the writeable is not set, do nothing
-        return;
-      }
-      const mutateOptions = {
-        mutation: AddCodegenUserDocument,
-        ...options,
-      };
-      set({
-        invocationCount,
-        executing: true,
-        options: mutateOptions
-      });
-      client
-        .mutate<AddCodegenUserMutation,AddCodegenUserMutationVariables>(mutateOptions)
-        .then((x) => {
-          if (unsubscribed) return;
-          set({
-            ...x,
-            invocationCount,
-            options: mutateOptions,
-          });
-        })
-        .catch((error) => {
-          set({
-            error,
-            invocationCount,
-            options: mutateOptions,
-          });
+    let stopReadingOptions: () => void;
+    return setVariables.subscribe(variables => {
+      if(invocationCount++ === 0) return; // Skip the first invocation
+      if(stopReadingOptions) stopReadingOptions();
+      let hasSubscriptions = true;
+      stopReadingOptions = rxOptions.subscribe(options => {
+        const requestOptions = {
+          mutation: AddCodegenUserDocument,
+          ...options,
+          variables: {
+            ...options?.variables,
+            ...variables
+          }
+        };
+        set({
+          invocationCount,
+          executing: true,
+          options: requestOptions
         });
-    }); 
-    return function stop() {
-      unsubscribed = true;
-      unsubscribe();
-      unSubscribeInvocationCount();
-    };
+        client
+          .mutate<AddCodegenUserMutation,AddCodegenUserMutationVariables>(requestOptions)
+          .then((x) => {
+            if (!hasSubscriptions) return;
+            set({
+              ...x,
+              invocationCount,
+              options: requestOptions,
+            });
+          })
+          .catch((error) => {
+            set({
+              error,
+              invocationCount,
+              options: requestOptions,
+            });
+          });
+      });
+      
+      return function stop(){
+        hasSubscriptions = false;
+        stopReadingOptions();
+      }
+    });
   });
   return [
-    variables,
+    setVariables,
     result
   ];
 }
@@ -1591,58 +1594,61 @@ export const DeleteCodegenUser = (
 ): [Writable<DeleteCodegenUserMutationVariables>,Readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>] => {
   
   rxOptions ??= readable<SvelteMutationOptions<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>({},noop);
-  const variables = writable<DeleteCodegenUserMutationVariables>(undefined);
-  let invocationCount = -1;
-  let unSubscribeInvocationCount = variables.subscribe(() => invocationCount++);
+  const setVariables = writable<DeleteCodegenUserMutationVariables>(undefined);
+  let invocationCount = 0;  
+
+  initialValue = {
+    invocationCount,
+    ...initialValue
+  };
 
   const result = readable<SvelteMutationResult<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>>(initialValue,(set) => {
-    let unsubscribed = false; 
-    const unsubscribe = derived([variables,rxOptions],(([variables,options]) => ({
-      ...options,
-      variables: {
-        ...options?.variables,
-        ...variables
-      }
-    }))).subscribe((options) => {
-      if(invocationCount===0){
-        // So long the writeable is not set, do nothing
-        return;
-      }
-      const mutateOptions = {
-        mutation: DeleteCodegenUserDocument,
-        ...options,
-      };
-      set({
-        invocationCount,
-        executing: true,
-        options: mutateOptions
-      });
-      client
-        .mutate<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>(mutateOptions)
-        .then((x) => {
-          if (unsubscribed) return;
-          set({
-            ...x,
-            invocationCount,
-            options: mutateOptions,
-          });
-        })
-        .catch((error) => {
-          set({
-            error,
-            invocationCount,
-            options: mutateOptions,
-          });
+    let stopReadingOptions: () => void;
+    return setVariables.subscribe(variables => {
+      if(invocationCount++ === 0) return; // Skip the first invocation
+      if(stopReadingOptions) stopReadingOptions();
+      let hasSubscriptions = true;
+      stopReadingOptions = rxOptions.subscribe(options => {
+        const requestOptions = {
+          mutation: DeleteCodegenUserDocument,
+          ...options,
+          variables: {
+            ...options?.variables,
+            ...variables
+          }
+        };
+        set({
+          invocationCount,
+          executing: true,
+          options: requestOptions
         });
-    }); 
-    return function stop() {
-      unsubscribed = true;
-      unsubscribe();
-      unSubscribeInvocationCount();
-    };
+        client
+          .mutate<DeleteCodegenUserMutation,DeleteCodegenUserMutationVariables>(requestOptions)
+          .then((x) => {
+            if (!hasSubscriptions) return;
+            set({
+              ...x,
+              invocationCount,
+              options: requestOptions,
+            });
+          })
+          .catch((error) => {
+            set({
+              error,
+              invocationCount,
+              options: requestOptions,
+            });
+          });
+      });
+      
+      return function stop(){
+        hasSubscriptions = false;
+        stopReadingOptions();
+      }
+    });
   });
   return [
-    variables,
+    setVariables,
     result
   ];
 }
@@ -1831,58 +1837,61 @@ export const InsertUsersAndPublish = (
 ): [Writable<InsertUsersAndPublishMutationVariables>,Readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>] => {
   
   rxOptions ??= readable<SvelteMutationOptions<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>({},noop);
-  const variables = writable<InsertUsersAndPublishMutationVariables>(undefined);
-  let invocationCount = -1;
-  let unSubscribeInvocationCount = variables.subscribe(() => invocationCount++);
+  const setVariables = writable<InsertUsersAndPublishMutationVariables>(undefined);
+  let invocationCount = 0;  
+
+  initialValue = {
+    invocationCount,
+    ...initialValue
+  };
 
   const result = readable<SvelteMutationResult<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>>(initialValue,(set) => {
-    let unsubscribed = false; 
-    const unsubscribe = derived([variables,rxOptions],(([variables,options]) => ({
-      ...options,
-      variables: {
-        ...options?.variables,
-        ...variables
-      }
-    }))).subscribe((options) => {
-      if(invocationCount===0){
-        // So long the writeable is not set, do nothing
-        return;
-      }
-      const mutateOptions = {
-        mutation: InsertUsersAndPublishDocument,
-        ...options,
-      };
-      set({
-        invocationCount,
-        executing: true,
-        options: mutateOptions
-      });
-      client
-        .mutate<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>(mutateOptions)
-        .then((x) => {
-          if (unsubscribed) return;
-          set({
-            ...x,
-            invocationCount,
-            options: mutateOptions,
-          });
-        })
-        .catch((error) => {
-          set({
-            error,
-            invocationCount,
-            options: mutateOptions,
-          });
+    let stopReadingOptions: () => void;
+    return setVariables.subscribe(variables => {
+      if(invocationCount++ === 0) return; // Skip the first invocation
+      if(stopReadingOptions) stopReadingOptions();
+      let hasSubscriptions = true;
+      stopReadingOptions = rxOptions.subscribe(options => {
+        const requestOptions = {
+          mutation: InsertUsersAndPublishDocument,
+          ...options,
+          variables: {
+            ...options?.variables,
+            ...variables
+          }
+        };
+        set({
+          invocationCount,
+          executing: true,
+          options: requestOptions
         });
-    }); 
-    return function stop() {
-      unsubscribed = true;
-      unsubscribe();
-      unSubscribeInvocationCount();
-    };
+        client
+          .mutate<InsertUsersAndPublishMutation,InsertUsersAndPublishMutationVariables>(requestOptions)
+          .then((x) => {
+            if (!hasSubscriptions) return;
+            set({
+              ...x,
+              invocationCount,
+              options: requestOptions,
+            });
+          })
+          .catch((error) => {
+            set({
+              error,
+              invocationCount,
+              options: requestOptions,
+            });
+          });
+      });
+      
+      return function stop(){
+        hasSubscriptions = false;
+        stopReadingOptions();
+      }
+    });
   });
   return [
-    variables,
+    setVariables,
     result
   ];
 }

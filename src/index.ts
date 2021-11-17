@@ -280,58 +280,61 @@ export const ${functionName} = (
 ): [Writable<${opv}>,Readable<${mutationResultInterfaceName}<${op},${opv}>>] => {
   
   rxOptions ??= readable<${mutationOptionsInterfaceName}<${op},${opv}>>({},noop);
-  const variables = writable<${opv}>(undefined);
-  let invocationCount = -1;
-  let unSubscribeInvocationCount = variables.subscribe(() => invocationCount++);
+  const setVariables = writable<${opv}>(undefined);
+  let invocationCount = 0;  
+
+  initialValue = {
+    invocationCount,
+    ...initialValue
+  };
 
   const result = readable<${mutationResultInterfaceName}<${op},${opv}>>(initialValue,(set) => {
-    let unsubscribed = false; 
-    const unsubscribe = derived([variables,rxOptions],(([variables,options]) => ({
-      ...options,
-      variables: {
-        ...options?.variables,
-        ...variables
-      }
-    }))).subscribe((options) => {
-      if(invocationCount===0){
-        // So long the writeable is not set, do nothing
-        return;
-      }
-      const mutateOptions = {
-        mutation: ${documentVariableName},
-        ...options,
-      };
-      set({
-        invocationCount,
-        executing: true,
-        options: mutateOptions
-      });
-      client
-        .mutate<${op},${opv}>(mutateOptions)
-        .then((x) => {
-          if (unsubscribed) return;
-          set({
-            ...x,
-            invocationCount,
-            options: mutateOptions,
-          });
-        })
-        .catch((error) => {
-          set({
-            error,
-            invocationCount,
-            options: mutateOptions,
-          });
+    let stopReadingOptions: () => void;
+    return setVariables.subscribe(variables => {
+      if(invocationCount++ === 0) return; // Skip the first invocation
+      if(stopReadingOptions) stopReadingOptions();
+      let hasSubscriptions = true;
+      stopReadingOptions = rxOptions.subscribe(options => {
+        const requestOptions = {
+          mutation: ${documentVariableName},
+          ...options,
+          variables: {
+            ...options?.variables,
+            ...variables
+          }
+        };
+        set({
+          invocationCount,
+          executing: true,
+          options: requestOptions
         });
-    }); 
-    return function stop() {
-      unsubscribed = true;
-      unsubscribe();
-      unSubscribeInvocationCount();
-    };
+        client
+          .mutate<${op},${opv}>(requestOptions)
+          .then((x) => {
+            if (!hasSubscriptions) return;
+            set({
+              ...x,
+              invocationCount,
+              options: requestOptions,
+            });
+          })
+          .catch((error) => {
+            set({
+              error,
+              invocationCount,
+              options: requestOptions,
+            });
+          });
+      });
+      
+      return function stop(){
+        hasSubscriptions = false;
+        stopReadingOptions();
+      }
+    });
   });
   return [
-    variables,
+    setVariables,
     result
   ];
 }
